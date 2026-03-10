@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2024"
 description = "Strip noise from error output. Powered by a local LLM."
 license = "MIT"
+repository = "https://github.com/nid666/sift"
+homepage = "https://github.com/nid666/sift"
+readme = "README.md"
+keywords = ["cli", "error", "llm", "debug", "filter"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 clap = { version = "^4.5", features = ["derive"] }

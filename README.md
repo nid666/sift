@@ -3,7 +3,7 @@
 # Sift
 *Strip noise from error output*
 
-
+[![Build Status](https://img.shields.io/github/actions/workflow/status/nid666/sift/ci.yml?style=flat-square)](https://github.com/nid666/sift/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 [Features](#features) • [Installation](#installation) • [Usage](#usage)

@@ -49,8 +49,6 @@ jobs:
         env:
           # Disable OpenMP on Windows to remove vcomp140.dll runtime dependency
           GGML_OPENMP: ${{ runner.os == 'Windows' && 'OFF' || '' }}
-          # Statically link the MSVC C runtime so the .exe is fully standalone
-          RUSTFLAGS: ${{ runner.os == 'Windows' && '-C target-feature=+crt-static' || '' }}
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Rename binary (non-Windows)

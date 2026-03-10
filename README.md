@@ -29,6 +29,35 @@
 
 ## Installation
 
+### Download prebuilt binary
+
+Grab the latest binary from [GitHub Releases](https://github.com/nid666/sift/releases/latest) and put it on your `PATH`:
+
+**macOS (Apple Silicon)**
+```bash
+curl -L https://github.com/nid666/sift/releases/latest/download/sift-macos-aarch64 -o sift
+chmod +x sift
+sudo mv sift /usr/local/bin/
+```
+
+**macOS (Intel)**
+```bash
+curl -L https://github.com/nid666/sift/releases/latest/download/sift-macos-x86_64 -o sift
+chmod +x sift
+sudo mv sift /usr/local/bin/
+```
+
+**Linux (x86_64)**
+```bash
+curl -L https://github.com/nid666/sift/releases/latest/download/sift-linux-x86_64 -o sift
+chmod +x sift
+sudo mv sift /usr/local/bin/
+```
+
+**Windows (x86_64)**
+
+Download [`sift-windows-x86_64.exe`](https://github.com/nid666/sift/releases/latest/download/sift-windows-x86_64.exe), rename it to `sift.exe`, and place it in a directory on your `PATH` (e.g., `C:\Users\<you>\bin\`).
+
 ### Build from source
 
 Requires: [Rust toolchain](https://rustup.rs) (stable), a C++ compiler (clang or gcc), and cmake.

@@ -1,5 +1,5 @@
 [package]
-name = "sift"
+name = "sift-cli"
 version = "0.1.0"
 edition = "2024"
 description = "Strip noise from error output. Powered by a local LLM."

@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use llama_cpp_2::llama_backend::LlamaBackend;
 use llama_cpp_2::llama_batch::LlamaBatch;
@@ -6,6 +6,41 @@ use llama_cpp_2::llama_batch::LlamaBatch;
 use llama_cpp_2::model::{LlamaModel, AddBos, Special, params::LlamaModelParams};
 use llama_cpp_2::context::params::LlamaContextParams;
 use llama_cpp_2::sampling::LlamaSampler;
+
+/// On Windows, converts a path to its short (8.3) form via `GetShortPathNameW`
+/// so that the ASCII-only short path can be safely passed to MSVCRT `fopen()`.
+/// Falls back to the original path if the conversion fails.
+/// On non-Windows platforms, returns the path unchanged.
+#[cfg(target_os = "windows")]
+fn to_short_path(path: &Path) -> PathBuf {
+    use std::os::windows::ffi::{OsStrExt, OsStringExt};
+    use std::ffi::OsString;
+    use windows_sys::Win32::Storage::FileSystem::GetShortPathNameW;
+
+    // Encode the path as a null-terminated wide string.
+    let mut wide: Vec<u16> = path.as_os_str().encode_wide().collect();
+    wide.push(0u16);
+
+    // First call: get the required buffer size.
+    let needed = unsafe { GetShortPathNameW(wide.as_ptr(), std::ptr::null_mut(), 0) };
+    if needed == 0 {
+        return path.to_path_buf();
+    }
+
+    // Second call: fill the buffer.
+    let mut buf: Vec<u16> = vec![0u16; needed as usize];
+    let written = unsafe { GetShortPathNameW(wide.as_ptr(), buf.as_mut_ptr(), needed) };
+    if written == 0 || written >= needed {
+        return path.to_path_buf();
+    }
+
+    PathBuf::from(OsString::from_wide(&buf[..written as usize]))
+}
+
+#[cfg(not(target_os = "windows"))]
+fn to_short_path(path: &Path) -> PathBuf {
+    path.to_path_buf()
+}
 
 pub const CLEAN_SYSTEM_PROMPT: &str = r#"You clean raw error output so an LLM debugging agent can diagnose the root cause. Given a raw error, return ONLY the cleaned version.
 REMOVED:
@@ -63,7 +98,8 @@ impl SiftModel {
         backend.void_logs();
 
         let model_params = LlamaModelParams::default();
-        let model = LlamaModel::load_from_file(&backend, model_path, &model_params)
+        let short_path = to_short_path(model_path);
+        let model = LlamaModel::load_from_file(&backend, &short_path, &model_params)
             .context("Failed to load GGUF model")?;
 
         Ok(Self { model, backend })

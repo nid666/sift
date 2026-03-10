@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon files
+Icon?
+
+# Thumbnails
+._*
+
+# Files created by Finder
+.Spotlight-V100
+.Trashes
+
+# macOS volume files
+.VolumeIcon.icns
+.fseventsd

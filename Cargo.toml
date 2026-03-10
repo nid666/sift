@@ -10,6 +10,10 @@ readme = "README.md"
 keywords = ["cli", "error", "llm", "debug", "filter"]
 categories = ["command-line-utilities", "development-tools"]
 
+[[bin]]
+name = "sift"
+path = "src/main.rs"
+
 [dependencies]
 clap = { version = "^4.5", features = ["derive"] }
 llama-cpp-2 = "0.1"

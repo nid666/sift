@@ -117,6 +117,11 @@ pub fn ensure_model(model_dir: &Path, force: bool) -> Result<PathBuf> {
 
         pb.finish_with_message("Download complete");
 
+        // Flush and close the file handle before renaming.
+        // On Windows, mandatory file locking prevents rename while the handle is open.
+        file.sync_all().context("Failed to flush model file")?;
+        drop(file);
+
         // Rename tmp to final
         fs::rename(&tmp_path, &model_path).context("Failed to rename model file")?;
         Ok(())

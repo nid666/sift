@@ -90,22 +90,29 @@ pub struct SiftModel {
 
 impl SiftModel {
     pub fn load(model_path: &Path) -> Result<Self> {
+        eprintln!("[sift-debug] model::load: before LlamaBackend::init()");
         let mut backend = LlamaBackend::init()
             .context("Failed to initialize llama backend")?;
+        eprintln!("[sift-debug] model::load: after LlamaBackend::init()");
 
         // Suppress llama.cpp's noisy log output via the library-level API.
         // This is platform-agnostic
+        eprintln!("[sift-debug] model::load: before backend.void_logs()");
         backend.void_logs();
+        eprintln!("[sift-debug] model::load: after backend.void_logs()");
 
         let model_params = LlamaModelParams::default();
         let short_path = to_short_path(model_path);
+        eprintln!("[sift-debug] model::load: before LlamaModel::load_from_file() path={}", short_path.display());
         let model = LlamaModel::load_from_file(&backend, &short_path, &model_params)
             .context("Failed to load GGUF model")?;
+        eprintln!("[sift-debug] model::load: after LlamaModel::load_from_file()");
 
         Ok(Self { model, backend })
     }
 
     pub fn infer(&self, system_prompt: &str, user_input: &str) -> Result<String> {
+        eprintln!("[sift-debug] model::infer: before creating context");
         let n_threads = std::thread::available_parallelism()
             .map(|n| (n.get() / 2).max(1) as i32)
             .unwrap_or(4);
@@ -117,6 +124,7 @@ impl SiftModel {
 
         let mut ctx = self.model.new_context(&self.backend, ctx_params)
             .context("Failed to create llama context")?;
+        eprintln!("[sift-debug] model::infer: after creating context");
 
         // Build the prompt using Qwen chat template
         let prompt = format!(
@@ -124,8 +132,10 @@ impl SiftModel {
         );
 
         // Tokenize
+        eprintln!("[sift-debug] model::infer: before tokenizing");
         let mut tokens = self.model.str_to_token(&prompt, AddBos::Always)
             .context("Failed to tokenize prompt")?;
+        eprintln!("[sift-debug] model::infer: after tokenizing ({} tokens)", tokens.len());
 
         let max_tokens = 512;
 
@@ -144,7 +154,9 @@ impl SiftModel {
         }
 
         // Decode the prompt
+        eprintln!("[sift-debug] model::infer: before decode/eval prompt batch");
         ctx.decode(&mut batch).context("Failed to decode prompt batch")?;
+        eprintln!("[sift-debug] model::infer: after decode/eval prompt batch");
 
         // Set up sampler with temperature and penalties
         let mut sampler = LlamaSampler::chain_simple([
@@ -158,7 +170,9 @@ impl SiftModel {
         let mut output = String::new();
         let mut n_decoded = tokens.len() as i32;
 
-        for _ in 0..max_tokens {
+        eprintln!("[sift-debug] model::infer: before sampling loop (max_tokens={})", max_tokens);
+        for iteration in 0..max_tokens {
+            eprintln!("[sift-debug] model::infer: sampling iteration {}", iteration);
             let token = sampler.sample(&ctx, -1);
 
             // Check for EOS
@@ -192,6 +206,7 @@ impl SiftModel {
             ctx.decode(&mut next_batch).context("Failed to decode token")?;
             n_decoded += 1;
         }
+        eprintln!("[sift-debug] model::infer: after sampling loop ({} chars generated)", output.len());
 
         // Strip any <think>...</think> tags (Qwen thinking mode artifacts)
         let output = strip_think_tags(&output);

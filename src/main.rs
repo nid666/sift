@@ -68,20 +68,24 @@ fn main() -> Result<()> {
     }
 
     // Read all of stdin
+    eprintln!("[sift-debug] before reading stdin");
     let mut input = String::new();
     stdin.lock().read_to_string(&mut input)
         .context("Failed to read stdin")?;
+    eprintln!("[sift-debug] after reading stdin ({} bytes)", input.len());
 
     if input.trim().is_empty() {
         anyhow::bail!("No input received. Pipe error output to sift:\n  command 2>&1 | sift");
     }
 
     // Stage 1: Pre-filter (unless --raw)
+    eprintln!("[sift-debug] before prefilter (raw={})", cli.raw);
     let filtered = if cli.raw {
         input
     } else {
         prefilter::prefilter(&input)
     };
+    eprintln!("[sift-debug] after prefilter ({} bytes)", filtered.len());
 
     // If --no-model, just output the pre-filtered text
     if cli.no_model {
@@ -95,49 +99,64 @@ fn main() -> Result<()> {
     }
 
     // Ensure model exists
+    eprintln!("[sift-debug] before ensure_model");
     let model_dir = get_model_dir();
     let model_path = download::ensure_model(&model_dir, false)?;
+    eprintln!("[sift-debug] after ensure_model: {}", model_path.display());
 
     // Load model
+    eprintln!("[sift-debug] before SiftModel::load");
     let spinner = tui::show_loading_spinner("Loading model...");
     let sift_model = model::SiftModel::load(&model_path)?;
     spinner.stop();
+    eprintln!("[sift-debug] after SiftModel::load");
 
     let final_output = if cli.verbose {
         // Run both clean and search
+        eprintln!("[sift-debug] before infer (clean, verbose mode)");
         let spinner = tui::show_loading_spinner("Analyzing error...");
         let clean = sift_model.infer(model::CLEAN_SYSTEM_PROMPT, &filtered)?;
         spinner.stop();
+        eprintln!("[sift-debug] after infer (clean, verbose mode)");
 
+        eprintln!("[sift-debug] before infer (search, verbose mode)");
         let spinner = tui::show_loading_spinner("Generating search query...");
         let search = sift_model.infer(model::SEARCH_SYSTEM_PROMPT, &filtered)?;
         spinner.stop();
+        eprintln!("[sift-debug] after infer (search, verbose mode)");
 
         let output = format!("--- Clean Error ---\n{clean}\n\n--- Search Query ---\n{search}");
         println!("{output}");
         output
     } else if cli.search {
+        eprintln!("[sift-debug] before infer (search mode)");
         let spinner = tui::show_loading_spinner("Generating search query...");
         let search = sift_model.infer(model::SEARCH_SYSTEM_PROMPT, &filtered)?;
         spinner.stop();
+        eprintln!("[sift-debug] after infer (search mode)");
 
         println!("{search}");
         search
     } else {
+        eprintln!("[sift-debug] before infer (clean mode)");
         let spinner = tui::show_loading_spinner("Analyzing error...");
         let clean = sift_model.infer(model::CLEAN_SYSTEM_PROMPT, &filtered)?;
         spinner.stop();
+        eprintln!("[sift-debug] after infer (clean mode)");
 
         println!("{clean}");
         clean
     };
 
     // Stage 3: Clipboard copy
+    eprintln!("[sift-debug] before clipboard copy");
     if !cli.no_copy {
         if clipboard::copy_to_clipboard(&final_output) {
             eprintln!("Copied to clipboard");
         }
     }
+    eprintln!("[sift-debug] after clipboard copy");
 
+    eprintln!("[sift-debug] before program exit");
     Ok(())
 }

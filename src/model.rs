@@ -91,6 +91,15 @@ pub struct SiftModel {
 impl SiftModel {
     pub fn load(model_path: &Path) -> Result<Self> {
         eprintln!("[sift-debug] model::load: before LlamaBackend::init()");
+        #[cfg(target_arch = "x86_64")]
+        {
+            eprintln!("[sift-debug] CPU: AVX={}, AVX2={}, FMA={}, F16C={}, SSE2={}",
+                is_x86_feature_detected!("avx"),
+                is_x86_feature_detected!("avx2"),
+                is_x86_feature_detected!("fma"),
+                is_x86_feature_detected!("f16c"),
+                is_x86_feature_detected!("sse2"));
+        }
         let mut backend = LlamaBackend::init()
             .context("Failed to initialize llama backend")?;
         eprintln!("[sift-debug] model::load: after LlamaBackend::init()");

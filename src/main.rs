@@ -107,8 +107,9 @@ fn main() -> Result<()> {
     // Load model
     eprintln!("[sift-debug] before SiftModel::load");
     let spinner = tui::show_loading_spinner("Loading model...");
+    spinner.stop();  // Stop spinner BEFORE FFI call to eliminate race condition
+    eprintln!("[sift-debug] spinner stopped, about to load model");
     let sift_model = model::SiftModel::load(&model_path)?;
-    spinner.stop();
     eprintln!("[sift-debug] after SiftModel::load");
 
     let final_output = if cli.verbose {

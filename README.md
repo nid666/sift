@@ -54,10 +54,6 @@ chmod +x sift
 sudo mv sift /usr/local/bin/
 ```
 
-**Windows (x86_64)**
-
-Download [`sift-windows-x86_64.exe`](https://github.com/nid666/sift/releases/latest/download/sift-windows-x86_64.exe), rename it to `sift.exe`, and place it in a directory on your `PATH` (e.g., `C:\Users\<you>\bin\`).
-
 ### Build from source
 
 Requires: [Rust toolchain](https://rustup.rs) (stable), a C++ compiler (clang or gcc), and cmake.
@@ -148,7 +144,6 @@ The GGUF model file is stored in your platform's standard data directory:
 |----------|------|
 | macOS    | `~/Library/Application Support/sift/` |
 | Linux    | `~/.local/share/sift/` |
-| Windows  | `%APPDATA%\sift\` |
 
 To force a fresh download (e.g., after a corrupted file):
 

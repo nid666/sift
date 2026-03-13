@@ -21,9 +21,6 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             artifact: sift-macos-aarch64
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact: sift-windows-x86_64.exe
 
     steps:
       - name: Checkout
@@ -50,13 +47,8 @@ jobs:
         env:
           CMAKE_ARGS: -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF
 
-      - name: Rename binary (non-Windows)
-        if: runner.os != 'Windows'
+      - name: Rename binary
         run: cp target/${{ matrix.target }}/release/sift ${{ matrix.artifact }}
-
-      - name: Rename binary (Windows)
-        if: runner.os == 'Windows'
-        run: cp target/${{ matrix.target }}/release/sift.exe ${{ matrix.artifact }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
